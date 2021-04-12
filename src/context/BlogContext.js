@@ -1,8 +1,11 @@
 import React,{useReducer} from 'react';
 import createDataContext from './createDataContext';
+import fetchJson from '../api/fetchJson';
 
 const blogReducer =(state,action)=>{
   switch (action.type) {
+    case "get_blogpost":
+      return action.payload;
     case "add_blogpost":
       return [...state,{title:action.payload.title,post:action.payload.post,id:Math.floor(Math.random()*9999)}];
     case "delete_blogpost":
@@ -15,9 +18,18 @@ const blogReducer =(state,action)=>{
   }
 }
 
+const getBlogPosts=dispatch=>{
+  return async()=>{
+    const response=await fetchJson.get('blogposts');
+    dispatch({type:"get_blogpost" ,payload:response.data});
+  };
+};
+
+
 const addBlogPosts=dispatch=>{
-  return(title,post,callback)=>{
-    dispatch({type:"add_blogpost" ,payload:{title,post}});
+  return async (title,post,callback)=>{
+    //dispatch({type:"add_blogpost" ,payload:{title,post}});
+    await fetchJson.post('blogposts',{title,post});
     if(callback){
       callback();
     }
@@ -25,13 +37,15 @@ const addBlogPosts=dispatch=>{
 }
 
 const deleteBlogPosts=dispatch=>{
-  return(id)=>{
+  return async id =>{
+     await fetchJson.delete(`blogposts/${id}`)
     dispatch({type:"delete_blogpost" ,payload:id})
  }
 }
 
 const editBlogPosts=dispatch=>{
-  return(id,title,post,callback)=>{
+  return async (id,title,post,callback)=>{
+    await fetchJson.put(`blogposts/${id}`,{title,post})
     dispatch({type:"edit_blogpost" ,payload:{id,title,post}})
     if(callback){
       callback();
@@ -41,4 +55,4 @@ const editBlogPosts=dispatch=>{
 
 
 
-export const {Context,Provider}=createDataContext(blogReducer,{addBlogPosts,deleteBlogPosts,editBlogPosts},[{title:"post 1" , post:"sdsdsd"}]);
+export const {Context,Provider}=createDataContext(blogReducer,{addBlogPosts,deleteBlogPosts,editBlogPosts,getBlogPosts},[]);
